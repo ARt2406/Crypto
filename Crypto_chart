@@ -1,0 +1,39 @@
+import pandas as pd
+import requests
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+
+def get_crypto_prices(symbol) -> pd.DataFrame:
+    end_time = int(datetime.now().timestamp() * 1000)
+    start_time = int((datetime.now() - timedelta(days=1)).timestamp() * 1000)
+
+    url = f'https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1m&startTime={start_time}&endTime={end_time}'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        times = [datetime.fromtimestamp(candle[0] / 1000) for candle in data]
+        prices = [float(candle[4]) for candle in data]
+
+        return times, prices
+    else:
+        print('Error')
+        return None, None
+
+def plot_crypto_prices(symbol):
+    times, prices = get_crypto_prices(symbol)
+
+    if times and prices:
+        plt.figure(figsize=(10, 6))
+        plt.plot(times, prices, label={symbol})
+        plt.xlabel('Time')
+        plt.ylabel('Price USDT')
+        plt.title(f'{symbol} 24hr prices')
+        plt.xticks(rotation=45)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+plot_crypto_prices('BTCUSDT')
+
